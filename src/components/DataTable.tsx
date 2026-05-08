@@ -35,15 +35,11 @@ export interface ColumnaTabla<T> {
 type DataTablePropsModern<T extends { id: string | number }> = {
   data: T[];
   columns: ColumnaTabla<T>[];
-  datos?: never;
-  columnas?: never;
 };
 
 type DataTablePropsLegacy<T extends { id: string | number }> = {
   datos: T[];
   columnas: ColumnaTabla<T>[];
-  data?: never;
-  columns?: never;
 };
 
 export type DataTableProps<T extends { id: string | number }> = (
@@ -66,9 +62,16 @@ interface EstadoEdicion<T> {
 
 export function DataTable<T extends { id: string | number }>(props: DataTableProps<T>) {
   const { titulo, onEditar, onEliminar } = props;
-  const esFormatoModerno = "data" in props;
-  const filas = esFormatoModerno ? props.data! : props.datos;
-  const columnasTabla = esFormatoModerno ? props.columns! : props.columnas;
+  let filas: T[];
+  let columnasTabla: ColumnaTabla<T>[];
+
+  if ("data" in props) {
+    filas = props.data;
+    columnasTabla = props.columns;
+  } else {
+    filas = props.datos;
+    columnasTabla = props.columnas;
+  }
 
   // Estado de edición: null = sin fila en edición, Partial<T> = campos modificados
   const [edicion, setEdicion] = useState<EstadoEdicion<T> | null>(null);
