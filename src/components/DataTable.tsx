@@ -32,15 +32,28 @@ export interface ColumnaTabla<T> {
   formatear?: (valor: T[keyof T]) => string;
 }
 
-export interface DataTableProps<T extends { id: string | number }> {
-  data?: T[];
-  columns?: ColumnaTabla<T>[];
-  datos?: T[];
-  columnas?: ColumnaTabla<T>[];
+type DataTablePropsModernas<T extends { id: string | number }> = {
+  data: T[];
+  columns: ColumnaTabla<T>[];
+  datos?: never;
+  columnas?: never;
+};
+
+type DataTablePropsLegadas<T extends { id: string | number }> = {
+  datos: T[];
+  columnas: ColumnaTabla<T>[];
+  data?: never;
+  columns?: never;
+};
+
+export type DataTableProps<T extends { id: string | number }> = (
+  | DataTablePropsModernas<T>
+  | DataTablePropsLegadas<T>
+) & {
   titulo?: string;
   onEditar?: (fila: T) => void;
   onEliminar?: (id: T["id"]) => void;
-}
+};
 
 // ─── Estado interno de edición ────────────────────────────────────────────────
 
