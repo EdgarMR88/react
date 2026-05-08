@@ -39,7 +39,7 @@ type DataTablePropsModernas<T extends { id: string | number }> = {
   columnas?: never;
 };
 
-type DataTablePropsLegadas<T extends { id: string | number }> = {
+type DataTablePropsCompatibilidad<T extends { id: string | number }> = {
   datos: T[];
   columnas: ColumnaTabla<T>[];
   data?: never;
@@ -48,7 +48,7 @@ type DataTablePropsLegadas<T extends { id: string | number }> = {
 
 export type DataTableProps<T extends { id: string | number }> = (
   | DataTablePropsModernas<T>
-  | DataTablePropsLegadas<T>
+  | DataTablePropsCompatibilidad<T>
 ) & {
   titulo?: string;
   onEditar?: (fila: T) => void;
