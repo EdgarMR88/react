@@ -32,14 +32,14 @@ export interface ColumnaTabla<T> {
   formatear?: (valor: T[keyof T]) => string;
 }
 
-type DataTablePropsModernas<T extends { id: string | number }> = {
+type DataTablePropsModern<T extends { id: string | number }> = {
   data: T[];
   columns: ColumnaTabla<T>[];
   datos?: never;
   columnas?: never;
 };
 
-type DataTablePropsCompatibilidad<T extends { id: string | number }> = {
+type DataTablePropsLegacy<T extends { id: string | number }> = {
   datos: T[];
   columnas: ColumnaTabla<T>[];
   data?: never;
@@ -47,8 +47,8 @@ type DataTablePropsCompatibilidad<T extends { id: string | number }> = {
 };
 
 export type DataTableProps<T extends { id: string | number }> = (
-  | DataTablePropsModernas<T>
-  | DataTablePropsCompatibilidad<T>
+  | DataTablePropsModern<T>
+  | DataTablePropsLegacy<T>
 ) & {
   titulo?: string;
   onEditar?: (fila: T) => void;
@@ -64,17 +64,11 @@ interface EstadoEdicion<T> {
 
 // ─── Componente ───────────────────────────────────────────────────────────────
 
-export function DataTable<T extends { id: string | number }>({
-  data,
-  columns,
-  datos,
-  columnas,
-  titulo,
-  onEditar,
-  onEliminar,
-}: DataTableProps<T>) {
-  const filas = data ?? datos ?? [];
-  const columnasTabla = columns ?? columnas ?? [];
+export function DataTable<T extends { id: string | number }>(props: DataTableProps<T>) {
+  const { titulo, onEditar, onEliminar } = props;
+  const esFormatoModerno = "data" in props;
+  const filas = esFormatoModerno ? props.data! : props.datos;
+  const columnasTabla = esFormatoModerno ? props.columns! : props.columnas;
 
   // Estado de edición: null = sin fila en edición, Partial<T> = campos modificados
   const [edicion, setEdicion] = useState<EstadoEdicion<T> | null>(null);
