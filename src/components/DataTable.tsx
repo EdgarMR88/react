@@ -32,12 +32,33 @@ export interface ColumnaTabla<T> {
   formatear?: (valor: T[keyof T]) => string;
 }
 
-export interface DataTableProps<T extends { id: string | number }> {
+type DataTablePropsModern<T extends { id: string | number }> = {
+  data: T[];
+  columns: ColumnaTabla<T>[];
+};
+
+type DataTablePropsLegacy<T extends { id: string | number }> = {
   datos: T[];
   columnas: ColumnaTabla<T>[];
+};
+
+export type DataTableProps<T extends { id: string | number }> = (
+  | DataTablePropsModern<T>
+  | DataTablePropsLegacy<T>
+) & {
   titulo?: string;
   onEditar?: (fila: T) => void;
   onEliminar?: (id: T["id"]) => void;
+};
+
+function esPropsModernas<T extends { id: string | number }>(
+  props: DataTableProps<T>
+): props is DataTablePropsModern<T> & {
+  titulo?: string;
+  onEditar?: (fila: T) => void;
+  onEliminar?: (id: T["id"]) => void;
+} {
+  return "data" in props;
 }
 
 // ─── Estado interno de edición ────────────────────────────────────────────────
@@ -49,13 +70,27 @@ interface EstadoEdicion<T> {
 
 // ─── Componente ───────────────────────────────────────────────────────────────
 
-export function DataTable<T extends { id: string | number }>({
-  datos,
-  columnas,
-  titulo,
-  onEditar,
-  onEliminar,
-}: DataTableProps<T>) {
+export function DataTable<T extends { id: string | number }>(props: DataTableProps<T>) {
+  const { titulo, onEditar, onEliminar } = props;
+  const propsComoRegistro = props as Record<string, unknown>;
+  const tienePropsModernas = "data" in propsComoRegistro || "columns" in propsComoRegistro;
+  const tienePropsLegadas = "datos" in propsComoRegistro || "columnas" in propsComoRegistro;
+
+  if (tienePropsModernas && tienePropsLegadas) {
+    throw new Error("DataTable recibió props modernas y legadas al mismo tiempo.");
+  }
+
+  let filas: T[];
+  let columnasTabla: ColumnaTabla<T>[];
+
+  if (esPropsModernas(props)) {
+    filas = props.data;
+    columnasTabla = props.columns;
+  } else {
+    filas = props.datos;
+    columnasTabla = props.columnas;
+  }
+
   // Estado de edición: null = sin fila en edición, Partial<T> = campos modificados
   const [edicion, setEdicion] = useState<EstadoEdicion<T> | null>(null);
 
@@ -91,7 +126,7 @@ export function DataTable<T extends { id: string | number }>({
         </h2>
       )}
 
-      {datos.length === 0 ? (
+      {filas.length === 0 ? (
         <p style={{ color: "#6b7280", fontStyle: "italic" }}>Sin datos disponibles.</p>
       ) : (
         <div style={{ overflowX: "auto" }}>
@@ -104,7 +139,7 @@ export function DataTable<T extends { id: string | number }>({
           >
             <thead>
               <tr style={{ backgroundColor: "#f3f4f6", textAlign: "left" }}>
-                {columnas.map((col) => (
+                {columnasTabla.map((col) => (
                   <th
                     key={String(col.clave)}
                     style={{ padding: "0.6rem 1rem", borderBottom: "2px solid #e5e7eb" }}
@@ -121,7 +156,7 @@ export function DataTable<T extends { id: string | number }>({
             </thead>
 
             <tbody>
-              {datos.map((fila) => {
+              {filas.map((fila) => {
                 const estaEditando = edicion?.filaId === fila.id;
 
                 return (
@@ -132,7 +167,7 @@ export function DataTable<T extends { id: string | number }>({
                       backgroundColor: estaEditando ? "#eff6ff" : "white",
                     }}
                   >
-                    {columnas.map((col) => (
+                    {columnasTabla.map((col) => (
                       <td key={String(col.clave)} style={{ padding: "0.6rem 1rem" }}>
                         {estaEditando ? (
                           <input
