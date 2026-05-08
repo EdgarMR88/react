@@ -33,8 +33,10 @@ export interface ColumnaTabla<T> {
 }
 
 export interface DataTableProps<T extends { id: string | number }> {
-  datos: T[];
-  columnas: ColumnaTabla<T>[];
+  data?: T[];
+  columns?: ColumnaTabla<T>[];
+  datos?: T[];
+  columnas?: ColumnaTabla<T>[];
   titulo?: string;
   onEditar?: (fila: T) => void;
   onEliminar?: (id: T["id"]) => void;
@@ -50,12 +52,17 @@ interface EstadoEdicion<T> {
 // ─── Componente ───────────────────────────────────────────────────────────────
 
 export function DataTable<T extends { id: string | number }>({
+  data,
+  columns,
   datos,
   columnas,
   titulo,
   onEditar,
   onEliminar,
 }: DataTableProps<T>) {
+  const filas = data ?? datos ?? [];
+  const columnasTabla = columns ?? columnas ?? [];
+
   // Estado de edición: null = sin fila en edición, Partial<T> = campos modificados
   const [edicion, setEdicion] = useState<EstadoEdicion<T> | null>(null);
 
@@ -91,7 +98,7 @@ export function DataTable<T extends { id: string | number }>({
         </h2>
       )}
 
-      {datos.length === 0 ? (
+      {filas.length === 0 ? (
         <p style={{ color: "#6b7280", fontStyle: "italic" }}>Sin datos disponibles.</p>
       ) : (
         <div style={{ overflowX: "auto" }}>
@@ -104,7 +111,7 @@ export function DataTable<T extends { id: string | number }>({
           >
             <thead>
               <tr style={{ backgroundColor: "#f3f4f6", textAlign: "left" }}>
-                {columnas.map((col) => (
+                {columnasTabla.map((col) => (
                   <th
                     key={String(col.clave)}
                     style={{ padding: "0.6rem 1rem", borderBottom: "2px solid #e5e7eb" }}
@@ -121,7 +128,7 @@ export function DataTable<T extends { id: string | number }>({
             </thead>
 
             <tbody>
-              {datos.map((fila) => {
+              {filas.map((fila) => {
                 const estaEditando = edicion?.filaId === fila.id;
 
                 return (
@@ -132,7 +139,7 @@ export function DataTable<T extends { id: string | number }>({
                       backgroundColor: estaEditando ? "#eff6ff" : "white",
                     }}
                   >
-                    {columnas.map((col) => (
+                    {columnasTabla.map((col) => (
                       <td key={String(col.clave)} style={{ padding: "0.6rem 1rem" }}>
                         {estaEditando ? (
                           <input

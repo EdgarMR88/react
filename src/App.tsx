@@ -126,8 +126,8 @@ export default function App() {
       {/* ── DataTable<Estudiante> ─────────────────────────────────────── */}
       <DataTable<Estudiante>
         titulo="Tabla de Estudiantes — DataTable<Estudiante>"
-        datos={estudiantes}
-        columnas={columnasEstudiante}
+        data={estudiantes}
+        columns={columnasEstudiante}
         onEditar={handleEditar}
         onEliminar={handleEliminar}
       />
