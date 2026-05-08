@@ -51,6 +51,16 @@ export type DataTableProps<T extends { id: string | number }> = (
   onEliminar?: (id: T["id"]) => void;
 };
 
+function esPropsModernas<T extends { id: string | number }>(
+  props: DataTableProps<T>
+): props is DataTablePropsModern<T> & {
+  titulo?: string;
+  onEditar?: (fila: T) => void;
+  onEliminar?: (id: T["id"]) => void;
+} {
+  return "data" in props;
+}
+
 // ─── Estado interno de edición ────────────────────────────────────────────────
 
 interface EstadoEdicion<T> {
@@ -62,10 +72,18 @@ interface EstadoEdicion<T> {
 
 export function DataTable<T extends { id: string | number }>(props: DataTableProps<T>) {
   const { titulo, onEditar, onEliminar } = props;
+  const propsComoRegistro = props as Record<string, unknown>;
+  const tienePropsModernas = "data" in propsComoRegistro || "columns" in propsComoRegistro;
+  const tienePropsLegadas = "datos" in propsComoRegistro || "columnas" in propsComoRegistro;
+
+  if (tienePropsModernas && tienePropsLegadas) {
+    throw new Error("DataTable recibió props modernas y legadas al mismo tiempo.");
+  }
+
   let filas: T[];
   let columnasTabla: ColumnaTabla<T>[];
 
-  if ("data" in props) {
+  if (esPropsModernas(props)) {
     filas = props.data;
     columnasTabla = props.columns;
   } else {
